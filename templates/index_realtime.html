@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa en Tiempo Real</title>
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            padding: 20px;
+        }
+        h1 {
+            color: #333;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            margin: 20px 0;
+        }
+        button {
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+            margin: 5px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .message {
+            color: #888;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mapa Generado en Tiempo Real</h1>
+    <p id="status">Esperando nuevos datos...</p>
+    {% if mapa_disponible %}
+        <img id="mapa" src="/mapeo?{{ now.timestamp() }}" alt="Mapa generado">
+    {% else %}
+        <p class="message">Aún no se ha generado ningún mapa. Por favor, envía datos para comenzar.</p>
+    {% endif %}
+    <div>
+        <button id="detener">Detener</button>
+        <button id="reiniciar">Reiniciar</button>
+    </div>
+    <script>
+        const socket = io();
+
+        // Actualizar mapa en tiempo real
+        socket.on('actualizar_mapa', (data) => {
+            console.log('Nuevo mapa generado, actualizando...');
+            document.getElementById('status').innerText = 'Mapa actualizado.';
+            document.getElementById('mapa').src = `/mapeo?${new Date().getTime()}`;
+        });
+
+        // Manejo del estado de detener
+        socket.on('detener_procesamiento', (data) => {
+            console.log('Procesamiento detenido.');
+            document.getElementById('status').innerText = 'Procesamiento detenido.';
+        });
+
+        // Manejo del estado de reiniciar
+        socket.on('reiniciar_procesamiento', (data) => {
+            console.log('Procesamiento reiniciado.');
+            document.getElementById('status').innerText = 'Procesamiento reiniciado.';
+        });
+
+        // Botón de detener
+        document.getElementById('detener').addEventListener('click', () => {
+            fetch('/detener', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => console.log(data));
+        });
+
+        // Botón de reiniciar
+        document.getElementById('reiniciar').addEventListener('click', () => {
+            fetch('/reiniciar', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => console.log(data));
+        });
+    </script>
+</body>
+</html>
